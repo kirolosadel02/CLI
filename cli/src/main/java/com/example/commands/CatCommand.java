@@ -11,7 +11,7 @@ public class CatCommand implements Command {
             System.out.println("Please specify a file name.");
             return;
         }
-        File file = new File(System.getProperty("user.dir") + File.separator + args[0]);
+        File file = new File(args[0]);
         if (file.exists()) {
             try {
                 Files.lines(file.toPath()).forEach(System.out::println);

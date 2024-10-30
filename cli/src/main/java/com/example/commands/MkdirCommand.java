@@ -9,7 +9,7 @@ public class MkdirCommand implements Command {
             System.out.println("Please specify a directory name.");
             return;
         }
-        File dir = new File(System.getProperty("user.dir") + File.separator + args[0]);
+        File dir = new File(args[0]);
         if (dir.mkdir()) {
             System.out.println("Directory created: " + dir.getName());
         } else {

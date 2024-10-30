@@ -64,6 +64,4 @@ public class MkdirCommandTest extends TestCase {
             dir.delete();
         }
     }
-
-    // Add more tests for other scenarios
 }

@@ -1,3 +1,4 @@
+
 package com.example.commands;
 
 import java.io.BufferedWriter;
@@ -24,8 +25,8 @@ public class RedirectCommand implements Command {
         String sourceFileName = args[1]; // Source file to read content from
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(targetFileName, append));
-                LineNumberReader reader = new LineNumberReader(new FileReader(sourceFileName))) {
-
+             LineNumberReader reader = new LineNumberReader(new FileReader(sourceFileName))) {
+            
             String line;
             while ((line = reader.readLine()) != null) {
                 writer.write(line);

@@ -1,5 +1,6 @@
 package com.example.commands;
 
+
 import java.io.File;
 
 public class CdCommand implements Command {
@@ -28,13 +29,13 @@ public class CdCommand implements Command {
             File directory = new File(dirPath);
 
             // Check if the directory is a valid absolute or relative path
-            if (directory.isDirectory() && directory.exists()) {
+            if (directory.isDirectory() && directory.exists() && args[0] != "...") {
                 System.setProperty("user.dir", directory.getAbsolutePath());
                 System.out.println("Directory changed to " + directory.getAbsolutePath());
             } else {
                 // Try to interpret the directory name as a relative path
                 File relativeDirectory = new File(System.getProperty("user.dir"), dirPath);
-                if (relativeDirectory.isDirectory() && relativeDirectory.exists()) {
+                if (relativeDirectory.isDirectory() && relativeDirectory.exists() && args[0] != "...") {
                     System.setProperty("user.dir", relativeDirectory.getAbsolutePath());
                     System.out.println("Directory changed to " + relativeDirectory.getAbsolutePath());
                 } else {

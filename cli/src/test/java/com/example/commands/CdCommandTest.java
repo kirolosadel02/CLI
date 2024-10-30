@@ -37,5 +37,38 @@ public class CdCommandTest extends TestCase {
         assertTrue(output.contains("Directory changed to"));
     }
 
-    // Add more tests for other scenarios
+    public void testCdToRoot() {
+        CdCommand cdCommand = new CdCommand();
+        cdCommand.execute(new String[] {});
+        String output = outContent.toString();
+        assertTrue(output.contains("Directory changed to"));
+    }
+
+    public void testCdToInvalidDirectory() {
+        CdCommand cdCommand = new CdCommand();
+        cdCommand.execute(new String[] { "invalid" });
+        String output = outContent.toString();
+        assertTrue(output.contains("Directory not found"));
+    }
+
+    public void testCdToNonDirectory() {
+        CdCommand cdCommand = new CdCommand();
+        cdCommand.execute(new String[] { "testfile.txt" });
+        String output = outContent.toString();
+        assertTrue(output.contains("Directory not found"));
+    }
+
+    public void testCdToRelativeDirectory() {
+        CdCommand cdCommand = new CdCommand();
+        cdCommand.execute(new String[] { "src" });
+        String output = outContent.toString();
+        assertTrue(output.contains("Directory changed to"));
+    }
+
+    public void testCdToParentDirectory() {
+        CdCommand cdCommand = new CdCommand();
+        cdCommand.execute(new String[] { ".." });
+        String output = outContent.toString();
+        assertTrue(output.contains("Directory changed to"));
+    }
 }

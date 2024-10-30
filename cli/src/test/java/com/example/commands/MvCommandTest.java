@@ -37,5 +37,35 @@ public class MvCommandTest extends TestCase {
         assertTrue(output.contains("Source file does not exist"));
     }
 
-    // Add more tests for other scenarios
+    public void testRenameFile() {
+      TouchCommand touchCommand = new TouchCommand();
+      touchCommand.execute(new String[] { "source.txt" });
+
+      MvCommand mvCommand = new MvCommand();
+      mvCommand.execute(new String[] { "source.txt", "destination.txt" });
+      String output = outContent.toString();
+
+      assertTrue(output.contains("Renamed"));
+
+      RmCommand rmCommand = new RmCommand();
+      rmCommand.execute(new String[] { "destination.txt" });
+    }
+
+    public void testMoveFile() {
+      TouchCommand touchCommand = new TouchCommand();
+      touchCommand.execute(new String[] { "source.txt" });
+
+      MkdirCommand mkdirCommand = new MkdirCommand();
+      mkdirCommand.execute(new String[] { "destination" });
+
+      MvCommand mvCommand = new MvCommand();
+      mvCommand.execute(new String[] { "source.txt", "destination" });
+      String output = outContent.toString();
+
+      assertTrue(output.contains("Moved"));
+
+      RmCommand rmCommand = new RmCommand();
+      rmCommand.execute(new String[] { "destination/source.txt" });
+      rmCommand.execute(new String[] { "destination" });
+    }
 }

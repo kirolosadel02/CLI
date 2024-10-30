@@ -36,6 +36,4 @@ public class HelpCommandTest extends TestCase {
         String output = outContent.toString();
         assertTrue(output.contains("Available commands:"));
     }
-
-    // Add more tests for other scenarios
 }

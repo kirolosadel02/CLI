@@ -7,9 +7,9 @@ import java.nio.file.Files;
 public class CatCommand implements Command {
     @Override
     public void execute(String[] args) {
-        if (args.length == 0) 
-            System.out.println("Please specify a file name.")
-            return
+        if (args.length == 0) {
+            System.out.println("Please specify a file name.");
+            return;
         }
         File file = new File(args[0]);
         if (file.exists()) {

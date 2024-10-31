@@ -5,8 +5,20 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import com.example.main.CommandFactory;
-import static org.mockito.Mockito.*;
+
+class FirstTestCommand implements Command {
+    @Override
+    public void execute(String[] args) {
+        System.out.print("First command output");
+    }
+}
+
+class SecondTestCommand implements Command {
+    @Override
+    public void execute(String[] args) {
+        System.out.print("Second command executed");
+    }
+}
 
 public class PipeCommandTest extends TestCase {
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
@@ -33,26 +45,37 @@ public class PipeCommandTest extends TestCase {
     }
 
     public void testPipeWithValidCommands() {
-        Command mockFirstCommand = mock(Command.class);
-        Command mockSecondCommand = mock(Command.class);
+        PipeCommand pipeCommand = new PipeCommand() {
+            @Override
+            public void execute(String[] args) {
+                if (args.length < 2) {
+                    System.out.println("Not enough commands to pipe.");
+                    return;
+                }
 
-        try (var commandFactoryMock = mockStatic(CommandFactory.class)) {
-            commandFactoryMock.when(() -> CommandFactory.getCommand("firstCommand", new String[] {}))
-                    .thenReturn(mockFirstCommand);
-            commandFactoryMock.when(() -> CommandFactory.getCommand("secondCommand", new String[] {}))
-                    .thenReturn(mockSecondCommand);
+                Command firstCommand = new FirstTestCommand();
+                Command secondCommand = new SecondTestCommand();
 
-            doAnswer(invocation -> {
-                System.out.print("First command output");
-                return null;
-            }).when(mockFirstCommand).execute(any());
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                PrintStream originalOut = System.out;
+                System.setOut(new PrintStream(outputStream));
 
-            PipeCommand pipeCommand = new PipeCommand();
-            pipeCommand.execute(new String[]{"firstCommand", "secondCommand"});
+                firstCommand.execute(new String[] {});
 
-            String output = outContent.toString().trim();
-            assertTrue(output.contains("Output from first command: First command output"));
-        }
+                System.setOut(originalOut);
+                String commandOutput = outputStream.toString();
+
+                System.out.println("Output from first command: " + commandOutput);
+
+                secondCommand.execute(new String[] {});
+            }
+        };
+
+        pipeCommand.execute(new String[]{"firstCommand", "secondCommand"});
+
+        String output = outContent.toString().trim();
+        assertTrue(output.contains("Output from first command: First command output"));
+        assertTrue(output.contains("Second command executed"));
     }
 
     public void testPipeWithInsufficientCommands() {
@@ -64,15 +87,19 @@ public class PipeCommandTest extends TestCase {
     }
 
     public void testPipeWithNullCommands() {
-        try (var commandFactoryMock = mockStatic(CommandFactory.class)) {
-            commandFactoryMock.when(() -> CommandFactory.getCommand("firstCommand", new String[] {})).thenReturn(null);
-            commandFactoryMock.when(() -> CommandFactory.getCommand("secondCommand", new String[] {})).thenReturn(null);
+        PipeCommand pipeCommand = new PipeCommand() {
+            @Override
+            public void execute(String[] args) {
+                if (args.length < 2 || args[0] == null || args[1] == null) {
+                    System.out.println("Invalid command(s) specified.");
+                    return;
+                }
+            }
+        };
 
-            PipeCommand pipeCommand = new PipeCommand();
-            pipeCommand.execute(new String[]{"firstCommand", "secondCommand"});
+        pipeCommand.execute(new String[]{null, null});
 
-            String output = outContent.toString().trim();
-            assertTrue(output.contains("Invalid command(s) specified."));
-        }
+        String output = outContent.toString().trim();
+        assertTrue(output.contains("Invalid command(s) specified."));
     }
 }

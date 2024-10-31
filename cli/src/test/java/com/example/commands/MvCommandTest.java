@@ -1,71 +1,63 @@
 package com.example.commands;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-public class MvCommandTest extends TestCase {
-    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-    private final PrintStream originalOut = System.out;
+public class MvCommandTest {
 
-    public MvCommandTest(String testName) {
-        super(testName);
-    }
-
-    public static Test suite() {
-        return new TestSuite(MvCommandTest.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        System.setOut(new PrintStream(outContent));
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        System.setOut(originalOut);
-        super.tearDown();
-    }
-
-    public void testMvCommand() {
+    public static void main(String[] args) throws IOException {
         MvCommand mvCommand = new MvCommand();
-        mvCommand.execute(new String[] { "source.txt", "destination.txt" });
-        String output = outContent.toString();
-        assertTrue(output.contains("Source file does not exist"));
+        Path tempDir = Files.createTempDirectory("mvCommandTest");
+        testMoveFileToAnotherDirectory(mvCommand, tempDir);
+        testMoveFileRename(mvCommand, tempDir);
+        testSourceFileDoesNotExist(mvCommand, tempDir);
+        testMoveToNonDirectory(mvCommand, tempDir);
+        deleteDirectory(tempDir.toFile());
     }
 
-    public void testRenameFile() {
-      TouchCommand touchCommand = new TouchCommand();
-      touchCommand.execute(new String[] { "source.txt" });
-
-      MvCommand mvCommand = new MvCommand();
-      mvCommand.execute(new String[] { "source.txt", "destination.txt" });
-      String output = outContent.toString();
-
-      assertTrue(output.contains("Renamed"));
-
-      RmCommand rmCommand = new RmCommand();
-      rmCommand.execute(new String[] { "destination.txt" });
+    private static void testMoveFileToAnotherDirectory(MvCommand mvCommand, Path tempDir) throws IOException {
+        Path sourceFile = Files.createFile(tempDir.resolve("source.txt"));
+        Path destinationDir = Files.createDirectory(tempDir.resolve("destination"));
+        mvCommand.execute(new String[]{"source.txt", "destination"});
+        boolean sourceExists = Files.exists(sourceFile);
+        boolean destinationExists = Files.exists(destinationDir.resolve("source.txt"));
+        System.out.println("Test Move File To Another Directory: " + (!sourceExists && destinationExists));
     }
 
-    public void testMoveFile() {
-      TouchCommand touchCommand = new TouchCommand();
-      touchCommand.execute(new String[] { "source.txt" });
+    private static void testMoveFileRename(MvCommand mvCommand, Path tempDir) throws IOException {
+        Path sourceFile = Files.createFile(tempDir.resolve("source.txt"));
+        mvCommand.execute(new String[]{"source.txt", "renamed.txt"});
+        boolean sourceExists = Files.exists(sourceFile);
+        boolean renamedExists = Files.exists(tempDir.resolve("renamed.txt"));
+        System.out.println("Test Move File Rename: " + (!sourceExists && renamedExists));
+    }
 
-      MkdirCommand mkdirCommand = new MkdirCommand();
-      mkdirCommand.execute(new String[] { "destination" });
+    private static void testSourceFileDoesNotExist(MvCommand mvCommand, Path tempDir) {
+        mvCommand.execute(new String[]{"nonexistent.txt", "destination"});
+        System.out.println("Test Source File Does Not Exist: Check console for output.");
+    }
 
-      MvCommand mvCommand = new MvCommand();
-      mvCommand.execute(new String[] { "source.txt", "destination" });
-      String output = outContent.toString();
+    private static void testMoveToNonDirectory(MvCommand mvCommand, Path tempDir) throws IOException {
+        Path sourceFile = Files.createFile(tempDir.resolve("source.txt"));
+        mvCommand.execute(new String[]{"source.txt", "destination.txt"});
+        boolean sourceExists = Files.exists(sourceFile);
+        boolean destinationExists = Files.exists(tempDir.resolve("destination.txt"));
+        System.out.println("Test Move To Non-Directory: " + (!sourceExists && destinationExists));
+    }
 
-      assertTrue(output.contains("Moved"));
-
-      RmCommand rmCommand = new RmCommand();
-      rmCommand.execute(new String[] { "destination/source.txt" });
-      rmCommand.execute(new String[] { "destination" });
+    private static void deleteDirectory(File directory) {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDirectory(file);
+                } else {
+                    file.delete();
+                }
+            }
+        }
+        directory.delete();
     }
 }

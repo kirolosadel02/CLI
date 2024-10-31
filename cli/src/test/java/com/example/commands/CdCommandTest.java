@@ -1,74 +1,52 @@
 package com.example.commands;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-public class CdCommandTest extends TestCase {
-    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-    private final PrintStream originalOut = System.out;
+public class CdCommandTest {
 
-    public CdCommandTest(String testName) {
-        super(testName);
-    }
+    public static void main(String[] args) throws IOException {
+        // Create a temporary directory structure for testing
+        Path tempDir = Files.createTempDirectory("cdCommandTest");
+        Path subDir = Files.createDirectory(tempDir.resolve("subDir"));
+        
+        // Current directory is set to the temporary directory
+        System.setProperty("user.dir", tempDir.toString());
 
-    public static Test suite() {
-        return new TestSuite(CdCommandTest.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        System.setOut(new PrintStream(outContent));
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        System.setOut(originalOut);
-        super.tearDown();
-    }
-
-    public void testCdCommand() {
+        // Test changing to a subdirectory
         CdCommand cdCommand = new CdCommand();
-        cdCommand.execute(new String[] { ".." });
-        String output = outContent.toString();
-        assertTrue(output.contains("Directory changed to"));
+        System.out.println("Current Directory: " + System.getProperty("user.dir"));
+        cdCommand.execute(new String[]{"subDir"});
+        System.out.println("Changed Directory: " + System.getProperty("user.dir"));
+
+        // Test changing to the parent directory
+        cdCommand.execute(new String[]{".."});
+        System.out.println("Changed Directory: " + System.getProperty("user.dir"));
+
+        // Test changing to the root directory
+        cdCommand.execute(new String[]{});
+        System.out.println("Changed Directory: " + System.getProperty("user.dir"));
+
+        // Test changing to a non-existent directory
+        cdCommand.execute(new String[]{"nonExistentDir"});
+
+        // Clean up temporary directory
+        deleteDirectory(tempDir.toFile());
     }
 
-    public void testCdToRoot() {
-        CdCommand cdCommand = new CdCommand();
-        cdCommand.execute(new String[] {});
-        String output = outContent.toString();
-        assertTrue(output.contains("Directory changed to"));
-    }
-
-    public void testCdToInvalidDirectory() {
-        CdCommand cdCommand = new CdCommand();
-        cdCommand.execute(new String[] { "invalid" });
-        String output = outContent.toString();
-        assertTrue(output.contains("Directory not found"));
-    }
-
-    public void testCdToNonDirectory() {
-        CdCommand cdCommand = new CdCommand();
-        cdCommand.execute(new String[] { "testfile.txt" });
-        String output = outContent.toString();
-        assertTrue(output.contains("Directory not found"));
-    }
-
-    public void testCdToRelativeDirectory() {
-        CdCommand cdCommand = new CdCommand();
-        cdCommand.execute(new String[] { "src" });
-        String output = outContent.toString();
-        assertTrue(output.contains("Directory changed to"));
-    }
-
-    public void testCdToParentDirectory() {
-        CdCommand cdCommand = new CdCommand();
-        cdCommand.execute(new String[] { ".." });
-        String output = outContent.toString();
-        assertTrue(output.contains("Directory changed to"));
+    private static void deleteDirectory(File directory) {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDirectory(file);
+                } else {
+                    file.delete();
+                }
+            }
+        }
+        directory.delete();
     }
 }

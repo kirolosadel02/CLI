@@ -12,33 +12,24 @@ public class PipeCommand implements Command {
             return;
         }
 
-        // First command
         Command firstCommand = CommandFactory.getCommand(args[0], new String[] {});
-        // Second command
+
         Command secondCommand = CommandFactory.getCommand(args[1], new String[] {});
 
-        // Capture output from the first command
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PrintStream originalOut = System.out;
         System.setOut(new PrintStream(outputStream));
 
         if (firstCommand != null) {
-            firstCommand.execute(new String[] {}); // Execute first command
+            firstCommand.execute(new String[] {});
         }
 
-        // Restore original output
         System.setOut(originalOut);
-        String commandOutput = outputStream.toString(); // Get the captured output
+        String commandOutput = outputStream.toString();
 
-        // Now we would pass this output to the second command
-        // Here you might want to modify secondCommand to accept input
-        // For simplicity, we will just print it out
         System.out.println("Output from first command: " + commandOutput);
 
         if (secondCommand != null) {
-            // If secondCommand can accept input, you might need to modify its execute
-            // method
-            // For demo purposes, we'll just execute it without any args
             secondCommand.execute(new String[] {});
         }
     }

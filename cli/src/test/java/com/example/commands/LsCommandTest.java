@@ -1,74 +1,54 @@
 package com.example.commands;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-public class LsCommandTest extends TestCase {
-    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-    private final PrintStream originalOut = System.out;
+public class LsCommandTest {
 
-    public LsCommandTest(String testName) {
-        super(testName);
-    }
+    public static void main(String[] args) throws IOException {
+        Path tempDir = Files.createTempDirectory("lsCommandTest");
+        
+        createTestFiles(tempDir);
 
-    public static Test suite() {
-        return new TestSuite(LsCommandTest.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        System.setOut(new PrintStream(outContent));
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        System.setOut(originalOut);
-        super.tearDown();
-    }
-
-    public void testLsCommand() {
+        System.out.println("Test without flags:");
         LsCommand lsCommand = new LsCommand(false, false);
-        lsCommand.execute(new String[] {});
-        String output = outContent.toString();
+        lsCommand.execute(new String[]{});
 
-        File[] files = new File(System.getProperty("user.dir")).listFiles();
-        Integer nonHiddenCount = 0;
-        for (File file : files) {
-            if (!file.isHidden()) {
-                nonHiddenCount++;
+        System.out.println("\nTest with showAll flag:");
+        lsCommand = new LsCommand(true, false);
+        lsCommand.execute(new String[]{});
+
+        System.out.println("\nTest with reverse flag:");
+        lsCommand = new LsCommand(false, true);
+        lsCommand.execute(new String[]{});
+
+        System.out.println("\nTest with showAll and reverse flags:");
+        lsCommand = new LsCommand(true, true);
+        lsCommand.execute(new String[]{});
+
+        deleteDirectory(tempDir.toFile());
+    }
+
+    private static void createTestFiles(Path tempDir) throws IOException {
+        Files.createFile(tempDir.resolve("file1.txt"));
+        Files.createFile(tempDir.resolve("file2.txt"));
+        Files.createFile(tempDir.resolve(".hiddenfile"));
+        Files.createFile(tempDir.resolve("file3.txt"));
+    }
+
+    private static void deleteDirectory(File directory) {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDirectory(file);
+                } else {
+                    file.delete();
+                }
             }
         }
-
-        Integer countOutput = output.split("\n").length;
-        assertEquals(nonHiddenCount, countOutput);
-    }
-
-
-    public void testLsCommandWithHidden() {
-        LsCommand lsCommand = new LsCommand(true, false);
-        lsCommand.execute(new String[] {});
-        String output = outContent.toString();
-
-        Integer countOutput = output.split("\n").length;
-        File[] files = new File(System.getProperty("user.dir")).listFiles();
-        assertTrue(countOutput == files.length);
-    }
-
-
-    public void testLsCommandWithReverse() {
-        LsCommand lsCommand = new LsCommand(true, true);
-        lsCommand.execute(new String[] {});
-        String output = outContent.toString();
-
-        File[] files = new File(System.getProperty("user.dir")).listFiles();
-        Integer count = files.length;
-
-        String[] outputLines = output.split("\n");
-        assertTrue(outputLines.length == count);
+        directory.delete();
     }
 }

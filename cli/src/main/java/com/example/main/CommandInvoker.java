@@ -40,7 +40,6 @@ public class CommandInvoker {
         String[] args = new String[parts.length - 1];
         System.arraycopy(parts, 1, args, 0, parts.length - 1);
 
-        // Use CommandFactory to get the command and execute it
         Command command = CommandFactory.getCommand(commandName, args);
         if (command != null) {
             command.execute(args);

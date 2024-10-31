@@ -21,8 +21,8 @@ public class RedirectCommand implements Command {
             return;
         }
 
-        String targetFileName = args[0]; // Target file where output will be redirected
-        String sourceFileName = args[1]; // Source file to read content from
+        String targetFileName = args[0];
+        String sourceFileName = args[1];
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(targetFileName, append));
              LineNumberReader reader = new LineNumberReader(new FileReader(sourceFileName))) {
@@ -30,7 +30,7 @@ public class RedirectCommand implements Command {
             String line;
             while ((line = reader.readLine()) != null) {
                 writer.write(line);
-                writer.newLine(); // Write a newline after each line read
+                writer.newLine();
             }
             System.out.println("Content redirected from " + sourceFileName + " to " + targetFileName);
         } catch (IOException e) {

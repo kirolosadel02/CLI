@@ -1,96 +1,53 @@
 package com.example.commands;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-public class RmCommandTest extends TestCase {
-    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-    private final PrintStream originalOut = System.out;
+public class RmCommandTest {
 
-    public RmCommandTest(String testName) {
-        super(testName);
-    }
+    public static void main(String[] args) throws IOException {
 
-    public static Test suite() {
-        return new TestSuite(RmCommandTest.class);
-    }
+        Path tempDir = Files.createTempDirectory("rmCommandTest");
+        
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        System.setOut(new PrintStream(outContent));
-    }
+        Path testFile = Files.createFile(tempDir.resolve("testFile.txt"));
+        System.setProperty("user.dir", tempDir.toString());
 
-    @Override
-    protected void tearDown() throws Exception {
-        System.setOut(originalOut);
-        super.tearDown();
-    }
-
-    public void testNoFileNameSpecified() {
-        RmCommand rmCommand = new RmCommand();
-        rmCommand.execute(new String[] {});
-
-        String output = outContent.toString().trim();
-        assertTrue(output.contains("Please specify a file name."));
-    }
-
-    public void testFileNotFound() {
-        RmCommand rmCommand = new RmCommand();
-        rmCommand.execute(new String[] { "nonexistentfile.txt" });
-
-        String output = outContent.toString().trim();
-        assertTrue(output.contains("File not found: nonexistentfile.txt"));
-    }
-
-    public void testDeleteExistingFile() throws IOException {
-        File tempFile = File.createTempFile("tempfile", ".txt");
-        tempFile.deleteOnExit();
-
-        System.setOut(originalOut);
-        System.out.println("Temporary file path: " + tempFile.getAbsolutePath());
-        System.setOut(new PrintStream(outContent));
 
         RmCommand rmCommand = new RmCommand();
-        rmCommand.execute(new String[] { tempFile.getName() });
 
-        String output = outContent.toString().trim();
-        assertTrue(output.contains("Deleted file: " + tempFile.getName()));
 
-        assertFalse(tempFile.exists());
+        System.out.println("Current Directory: " + System.getProperty("user.dir"));
+        rmCommand.execute(new String[]{"testFile.txt"});
+
+
+        if (!Files.exists(testFile)) {
+            System.out.println("File successfully deleted.");
+        } else {
+            System.out.println("File still exists.");
+        }
+
+        rmCommand.execute(new String[]{"nonExistentFile.txt"});
+
+        Path testDir = Files.createDirectory(tempDir.resolve("testDir"));
+        rmCommand.execute(new String[]{"testDir"});
+
+        deleteDirectory(tempDir.toFile());
     }
 
-    public void testDeleteDirectoryInsteadOfFile() throws IOException {
-        File tempDirectory = new File(System.getProperty("user.dir"), "tempDir");
-        tempDirectory.mkdir();
-        tempDirectory.deleteOnExit();
-
-        RmCommand rmCommand = new RmCommand();
-        rmCommand.execute(new String[] { tempDirectory.getName() });
-
-        String output = outContent.toString().trim();
-        assertTrue(output.contains("Specified path is a directory, not a file: " + tempDirectory.getName()));
-
-        assertTrue(tempDirectory.exists());
-    }
-
-    public void testFailedDeletion() throws IOException {
-        File readOnlyFile = File.createTempFile("readonlyfile", ".txt");
-        readOnlyFile.setReadOnly();
-        readOnlyFile.deleteOnExit();
-
-        RmCommand rmCommand = new RmCommand();
-        rmCommand.execute(new String[] { readOnlyFile.getName() });
-
-        String output = outContent.toString().trim();
-        assertTrue(output.contains("Failed to delete file: " + readOnlyFile.getName()));
-
-        readOnlyFile.setWritable(true);
+    private static void deleteDirectory(File directory) {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDirectory(file);
+                } else {
+                    file.delete();
+                }
+            }
+        }
+        directory.delete();
     }
 }

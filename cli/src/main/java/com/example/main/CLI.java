@@ -108,10 +108,8 @@ public class CLI {
                 System.setOut(originalOut);
             }
 
-            // Execute command and capture the output
             cmd.execute(getCommandArgs(tokens));
 
-            // Set captured output as input for the next command in pipeline
             if (i < commands.length - 1) {
                 outputStream.flush();
                 System.setIn(new ByteArrayInputStream(outputStream.toByteArray()));
@@ -119,7 +117,6 @@ public class CLI {
             }
         }
 
-        // Reset System.out to its original state
         System.setOut(originalOut);
     }
 

@@ -48,21 +48,16 @@ public class CatCommandTest extends TestCase {
     }
 
     public void testFileExists() throws IOException {
-        // Create a temporary file with some content
         File tempFile = File.createTempFile("testfile", ".txt");
         tempFile.deleteOnExit();
         Files.write(tempFile.toPath(), "Hello, World!".getBytes());
-
-        // Debug output
         System.setOut(originalOut);
         System.out.println("Temporary file path: " + tempFile.getAbsolutePath());
         System.setOut(new PrintStream(outContent));
-
         CatCommand catCommand = new CatCommand();
         catCommand.execute(new String[] { tempFile.getAbsolutePath() });
         String output = outContent.toString();
 
-        // Debug output
         System.setOut(originalOut);
         System.out.println("Command output: " + output);
         System.setOut(new PrintStream(outContent));

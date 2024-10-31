@@ -32,13 +32,11 @@ public class MkdirCommandTest extends TestCase {
     }
 
     public void testMkdirCommand() {
-        // Ensure the directory does not exist before the test
         File dir = new File("testDir");
         if (dir.exists()) {
             dir.delete();
         }
 
-        // Debug output: Current working directory
         System.setOut(originalOut);
         System.out.println("Current working directory: " + System.getProperty("user.dir"));
         System.setOut(new PrintStream(outContent));
@@ -47,19 +45,16 @@ public class MkdirCommandTest extends TestCase {
         mkdirCommand.execute(new String[] { "testDir" });
         String output = outContent.toString();
 
-        // Debug output
         System.setOut(originalOut);
         System.out.println("Command output: " + output);
         System.out.println("Directory exists: " + dir.exists());
         System.out.println("Directory is directory: " + dir.isDirectory());
         System.setOut(new PrintStream(outContent));
 
-        // Check if directory was created
         assertTrue(dir.exists() && dir.isDirectory());
 
         assertTrue(output.contains("Directory created: testDir"));
 
-        // Clean up
         if (dir.exists()) {
             dir.delete();
         }

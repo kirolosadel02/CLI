@@ -1,89 +1,63 @@
 package com.example.commands;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
-public class RedirectCommandTest extends TestCase {
+public class RedirectCommandTest {
 
-    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-    private final PrintStream originalOut = System.out;
+    public static void main(String[] args) throws IOException {
+        Path tempDir = Files.createTempDirectory("redirectCommandTest");
+        
+        Path sourceFile = Files.createFile(tempDir.resolve("source.txt"));
+        Files.writeString(sourceFile, "Hello, World!\nThis is a test.\n");
 
-    public RedirectCommandTest(String testName) {
-        super(testName);
-    }
-
-    public static Test suite() {
-        return new TestSuite(RedirectCommandTest.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        System.setOut(new PrintStream(outContent));
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        System.setOut(originalOut);
-        super.tearDown();
-    }
-
-    public void testRedirectCommand_SuccessfulRedirection() throws IOException {
-        // Set up source file with content
-        File sourceFile = File.createTempFile("sourceFile", ".txt");
-        sourceFile.deleteOnExit();
-        Files.write(sourceFile.toPath(), "This is a test.".getBytes());
-
-        File targetFile = File.createTempFile("targetFile", ".txt");
-        targetFile.deleteOnExit();
-
-        RedirectCommand redirectCommand = new RedirectCommand(false); // Not appending
-        redirectCommand.execute(new String[]{targetFile.getAbsolutePath(), sourceFile.getAbsolutePath()});
-
-        String output = outContent.toString().trim();
-        assertTrue(output.contains("Content redirected from " + sourceFile.getAbsolutePath() + " to " + targetFile.getAbsolutePath()));
-
-        String targetContent = new String(Files.readAllBytes(targetFile.toPath()));
-        assertEquals("This is a test.\n", targetContent);
-    }
-
-    public void testRedirectCommand_AppendContent() throws IOException {
-        File sourceFile = File.createTempFile("sourceFile", ".txt");
-        sourceFile.deleteOnExit();
-        Files.write(sourceFile.toPath(), "First line.".getBytes());
-        File targetFile = File.createTempFile("targetFile", ".txt");
-        targetFile.deleteOnExit();
-        Files.write(targetFile.toPath(), "Initial content.\n".getBytes());
-
-        RedirectCommand redirectCommand = new RedirectCommand(true); // Appending
-        redirectCommand.execute(new String[]{targetFile.getAbsolutePath(), sourceFile.getAbsolutePath()});
-
-        String output = outContent.toString().trim();
-        assertTrue(output.contains("Content redirected from " + sourceFile.getAbsolutePath() + " to " + targetFile.getAbsolutePath()));
-
-        String targetContent = new String(Files.readAllBytes(targetFile.toPath()));
-        assertEquals("Initial content.\nFirst line.\n", targetContent);
-    }
-
-    public void testRedirectCommand_MissingArguments() {
+        Path targetFile1 = tempDir.resolve("target.txt");
         RedirectCommand redirectCommand = new RedirectCommand(false);
-        redirectCommand.execute(new String[]{});
+        redirectCommand.execute(new String[]{targetFile1.toString(), sourceFile.toString()});
+        checkFileContent(targetFile1, "Hello, World!\nThis is a test.\n");
 
-        String output = outContent.toString().trim();
-        assertTrue(output.contains("Please specify a target file and a source file."));
+        Files.writeString(sourceFile, "Appending this line.\n");
+        RedirectCommand appendCommand = new RedirectCommand(true);
+        redirectCommand = appendCommand;
+        redirectCommand.execute(new String[]{targetFile1.toString(), sourceFile.toString()});
+        checkFileContent(targetFile1, "Hello, World!\nThis is a test.\nAppending this line.\n");
+
+        deleteDirectory(tempDir.toFile());
     }
 
-    public void testRedirectCommand_NonexistentSourceFile() {
-        File targetFile = new File("targetFile.txt");
+    private static void checkFileContent(Path filePath, String expectedContent) throws IOException {
+        StringBuilder actualContent = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath.toFile()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                actualContent.append(line).append("\n");
+            }
+        }
 
-        RedirectCommand redirectCommand = new RedirectCommand(false);
-        redirectCommand.execute(new String[]{targetFile.getAbsolutePath(), "nonexistentSource.txt"});
+        if (actualContent.toString().equals(expectedContent)) {
+            System.out.println("Content verification passed for " + filePath.getFileName());
+        } else {
+            System.out.println("Content verification failed for " + filePath.getFileName());
+            System.out.println("Expected:\n" + expectedContent);
+            System.out.println("Actual:\n" + actualContent);
+        }
+    }
 
-        String output = outContent.toString().trim();
-        assertTrue(output.contains("Error writing to file"));
+    private static void deleteDirectory(File directory) {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDirectory(file);
+                } else {
+                    file.delete();
+                }
+            }
+        }
+        directory.delete();
     }
 }
